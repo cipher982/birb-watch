@@ -30,7 +30,7 @@ jobs:
           USER=${{secrets.SSH_USER }}
           HOST=${{ secrets.HOST }}
           echo "${{ secrets.KEY }}" > $TEMP
-          scp -v -i $TEMP website/* $USER@$HOST:/home/
+          scp -v -o StrictHostKeyChecking=no -i $TEMP website/* $USER@$HOST:/home/
 
       #- name: copy file via ssh
       #  uses:  appleboy/scp-action@master
