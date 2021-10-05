@@ -33,5 +33,5 @@ jobs:
           #password: ${{ secrets.PASSWORD }}
           key: ${{ secrets.KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
-          source: ../website
+          source: website/
           target: "~./"
