@@ -8,10 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI: true
-      LOCAL: test
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - name: Run a multi-line script
+        run: |
+          mkdir ../website
+          cp -TR . ../website
       - name: Setup Tailscale
         id: tailscale
         uses: tailscale/tailscale-deploy-github@main
