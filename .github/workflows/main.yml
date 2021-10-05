@@ -25,13 +25,24 @@ jobs:
       #    authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
       #    version: 1.7.359
 
-      - name: copy file via ssh
-        uses:  appleboy/scp-action@master
+      #- name: copy file via ssh
+      #  uses:  appleboy/scp-action@master
+      #  with:
+      #    host: ${{ secrets.HOST }}
+      #    port: 22
+      #    username: ${{ secrets.SSH_USER }}
+      #    #password: ${{ secrets.PASSWORD }}
+      #    key: ${{ secrets.KEY }}
+      #    source: website/*
+      #    target: "~./"
+
+      - name: Deploy to sandbox via rsync
+        uses: trendyminds/github-actions-rsync@master
         with:
-          host: ${{ secrets.HOST }}
-          port: 22
-          username: ${{ secrets.SSH_USER }}
-          #password: ${{ secrets.PASSWORD }}
-          key: ${{ secrets.KEY }}
-          source: website/*
-          target: "~./"
+          RSYNC_OPTIONS: -avzr --delete --exclude node_modules --exclude '.git*'
+          RSYNC_TARGET: /home/drose/
+          RSYNC_SOURCE: /website
+        env:
+          SSH_PRIVATE_KEY: ${{secrets.KEY}}
+          SSH_USERNAME: ${{secrets.SSH_USER}}
+          SSH_HOSTNAME: ${{secrets.HOST}}
