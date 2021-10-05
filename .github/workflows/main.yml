@@ -10,6 +10,12 @@ jobs:
       CI: true
       LOCAL: test
     steps:
+      - name: Setup Tailscale
+        id: tailscale
+        uses: tailscale/tailscale-deploy-github@main
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          version: 1.7.359
       - name: Copy folder content recursively to remote
         uses: ./
         with:
@@ -18,15 +24,4 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.PASSWORD }}
-          privateKey: ${{ secrets.PRIVATE_KEY}}
-      - name: Copy folder content recursively to remote (clean directory)
-        uses: ./
-        with:
-          local: test
-          remote: scp/directory
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.SSH_USER }}
-          password: ${{ secrets.PASSWORD }}
-          privateKey: ${{ secrets.PRIVATE_KEY}}
-          rmRemote: true
-          dotfiles: true   
+          privateKey: ${{ secrets.PRIVATE_KEY}} 
