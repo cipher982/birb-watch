@@ -18,20 +18,26 @@ jobs:
           pwd
           ls
           ls ..
-      - name: Setup Tailscale
-        id: tailscale
-        uses: tailscale/tailscale-deploy-github@main
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-          version: 1.7.359
-      - name: copy file via ssh
-        uses:  appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          port: 22
-          username: ${{ secrets.SSH_USER }}
-          #password: ${{ secrets.PASSWORD }}
-          key: ${{ secrets.KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-          source: website/*
-          target: "~./"
+      #- name: Setup Tailscale
+      #  id: tailscale
+      #  uses: tailscale/tailscale-deploy-github@main
+      #  with:
+      #    authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+      #    version: 1.7.359
+      - name: test ssh
+        run: |
+          TEMP=$(mktemp)
+          echo "${{ secrets.KEY }}" > $TEMP
+          scp -i $TEMP ${{secrets.SSH_USER }}@${{ secrets.HOST }}:/home/
+
+      #- name: copy file via ssh
+      #  uses:  appleboy/scp-action@master
+      #  with:
+      #    host: ${{ secrets.HOST }}
+      #    port: 22
+      #    username: ${{ secrets.SSH_USER }}
+      #    #password: ${{ secrets.PASSWORD }}
+      #    key: ${{ secrets.KEY }}
+      #    passphrase: ${{ secrets.PASSPHRASE }}
+      #    source: website/*
+      #    target: "~./"
