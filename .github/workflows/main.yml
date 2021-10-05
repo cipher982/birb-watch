@@ -39,7 +39,8 @@ jobs:
       - name: Adding Known Hosts
         run: |
           mkdir ~/.ssh
-          echo "private key ${{ secrets.KEY }}" >> ~/.ssh/id_rsa
+          chmod 0700 ~/.ssh
+          echo "${{ secrets.KEY }}" >> ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy with rsync
