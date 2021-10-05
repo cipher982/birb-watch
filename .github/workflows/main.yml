@@ -31,7 +31,9 @@ jobs:
           USER=${{ secrets.SSH_USER }}
           HOST=${{ secrets.HOST }}
           PW=${{ secrets.password }}
+          mkdir ~/.ssh
           mkdir ~/.ssh/authorized_keys/
+          chmod 700 ~/.ssh
           ECHO "${{ secrets.pub_key }}" > ~/.ssh/authorized_keys/actions.pub
           ECHO "${{ secrets.key }}" > ~/.ssh/actions.pub
           echo "scp to $USER@$HOST with pass $PW"
