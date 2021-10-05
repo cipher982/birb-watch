@@ -42,7 +42,7 @@ jobs:
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy with rsync
-        run: rsync -avz ./dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/zellwk/zellwk.com/dist/
+        run: rsync -avz ./website/ ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:/home/drose/
       
       - name: Deploy to sandbox via rsync
         uses: burnett01/rsync-deployments@5.1
