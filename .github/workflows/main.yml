@@ -37,12 +37,10 @@ jobs:
       #    target: "~./"
 
       - name: Deploy to sandbox via rsync
-        uses: trendyminds/github-actions-rsync@master
+        uses: burnett01/rsync-deployments@5.1
         with:
-          INPUT_RSYNC_OPTIONS: -avzr --delete --exclude node_modules --exclude '.git*'
-          INPUT_RSYNC_TARGET: /home/drose/
-          INPUT_RSYNC_SOURCE: /website/
-        env:
-          SSH_PRIVATE_KEY: ${{secrets.KEY}}
-          SSH_USERNAME: ${{secrets.SSH_USER}}
-          SSH_HOSTNAME: ${{secrets.HOST}}
+          switches: -avzr --delete
+          path: website/
+          remote_path: /home/drose/
+          remote_user: ${{ secrets.SSH_USER }}
+          remote_key: ${{secrets.KEY}}
