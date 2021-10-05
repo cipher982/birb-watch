@@ -19,8 +19,8 @@ jobs:
       - name: Copy folder content recursively to remote
         uses: ./
         with:
-          local: test
-          remote: scp//var/www/html
+          local: website/
+          remote: scp/var/www/html
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.PASSWORD }}
