@@ -24,6 +24,11 @@ jobs:
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
           version: 1.7.359
+      - name: test Tailscale
+        run: |
+          echo "testing Tailscale. . ."
+          pwd
+          tailscale status
       - name: copy file via ssh
         uses:  garygrossgarten/github-action-scp@release
         with:
