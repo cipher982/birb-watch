@@ -29,5 +29,5 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           #key: ${{ secrets.KEY }}
           #passphrase: ${{ secrets.PASSPHRASE }}
-          source: "website/"
-          target: "/var/www/html"
+          source: "./website/"
+          target: "./website/"
