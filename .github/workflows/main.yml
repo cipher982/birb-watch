@@ -15,6 +15,9 @@ jobs:
         run: |
           mkdir ../website
           cp -TR . ../website
+          pwd
+          ls
+          ls ..
       - name: Setup Tailscale
         id: tailscale
         uses: tailscale/tailscale-deploy-github@main
