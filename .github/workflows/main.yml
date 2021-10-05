@@ -42,5 +42,6 @@ jobs:
           switches: -avzr --delete
           path: website/
           remote_path: /home/drose/
+          remote_host: ${{ secrets.HOST }}
           remote_user: ${{ secrets.SSH_USER }}
-          remote_key: ${{secrets.KEY}}
+          remote_key: ${{secrets.KEY }}
