@@ -27,10 +27,11 @@ jobs:
       - name: test ssh
         run: |
           TEMP=$(mktemp)
-          USER=${{secrets.SSH_USER }}
+          USER=${{ secrets.SSH_USER }}
           HOST=${{ secrets.HOST }}
+          PW=${{ secrets.password }}
           echo "${{ secrets.KEY }}" > $TEMP
-          scp -v -o StrictHostKeyChecking=no -i $TEMP website/* $USER@$HOST:/home/
+          scp -v -o StrictHostKeyChecking=no -p $PW website/* $USER@$HOST:/home/
 
       #- name: copy file via ssh
       #  uses:  appleboy/scp-action@master
