@@ -30,7 +30,7 @@ jobs:
           pwd
           tailscale status
       - name: copy file via ssh
-        uses:  garygrossgarten/github-action-scp@release
+        uses:  appleboy/scp-action@master
         with:
           host: ${{ secrets.HOST }}
           port: 22
@@ -38,5 +38,5 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           #key: ${{ secrets.KEY }}
           #passphrase: ${{ secrets.PASSPHRASE }}
-          local: website
-          remote: ~/website/
+          source: website
+          target: ~/website/
