@@ -26,7 +26,8 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
           key: ${{ secrets.KEY }}
-          passphrase: ${{ secrets.PASSWORD }}
+          passphrase: ${{ secrets.PASSPHRASE }}
           source: "website/"
           target: "/var/www/html"
