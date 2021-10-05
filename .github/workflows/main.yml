@@ -27,12 +27,14 @@ jobs:
       - name: test ssh
         run: |
           TEMP=$(mktemp)
+          echo "${{ secrets.KEY }}" > $TEMP
           USER=${{ secrets.SSH_USER }}
           HOST=${{ secrets.HOST }}
           PW=${{ secrets.password }}
-          echo "${{ secrets.KEY }}" > $TEMP
           echo "scp to $USER@$HOST with pass $PW"
-          scp -v -o StrictHostKeyChecking=no -p $PW website/* $USER@$HOST:/home/
+          ssh -vv -o IdentitiesOnly=yes -i $TEMP $USER@HOST 'pwd'
+
+      # scp -v -o StrictHostKeyChecking=no -p $PW website/* $USER@$HOST:/home/
 
       #- name: copy file via ssh
       #  uses:  appleboy/scp-action@master
