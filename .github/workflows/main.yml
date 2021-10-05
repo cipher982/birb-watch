@@ -32,7 +32,7 @@ jobs:
           HOST=${{ secrets.HOST }}
           PW=${{ secrets.password }}
           echo "scp to $USER@$HOST with pass $PW"
-          ssh -vv -o IdentitiesOnly=yes -i $TEMP $USER@HOST 'pwd'
+          ssh -vv -o IdentitiesOnly=yes -i $TEMP $USER@$HOST 'pwd'
 
       # scp -v -o StrictHostKeyChecking=no -p $PW website/* $USER@$HOST:/home/
 
