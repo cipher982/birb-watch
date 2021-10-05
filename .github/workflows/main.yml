@@ -31,6 +31,7 @@ jobs:
           HOST=${{ secrets.HOST }}
           PW=${{ secrets.password }}
           echo "${{ secrets.KEY }}" > $TEMP
+          echo "scp to $USER@$HOST with pass $PW"
           scp -v -o StrictHostKeyChecking=no -p $PW website/* $USER@$HOST:/home/
 
       #- name: copy file via ssh
