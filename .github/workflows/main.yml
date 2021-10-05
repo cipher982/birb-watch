@@ -36,6 +36,9 @@ jobs:
       #    source: website/*
       #    target: "~./"
 
+      - name: Adding Known Hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        
       - name: Deploy to sandbox via rsync
         uses: burnett01/rsync-deployments@5.1
         with:
