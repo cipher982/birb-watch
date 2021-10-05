@@ -28,7 +28,7 @@ jobs:
         run: |
           echo "testing Tailscale. . ."
           pwd
-          ssh drose@100.126.130.121 & ls
+          ssh  -T drose@100.126.130.121 & ls
       - name: copy file via ssh
         uses:  appleboy/scp-action@master
         with:
