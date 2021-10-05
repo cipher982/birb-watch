@@ -24,31 +24,14 @@ jobs:
       #  with:
       #    authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
       #    version: 1.7.359
-      - name: test ssh
-        run: |
-          TEMP=$(mktemp)
-          echo "${{ secrets.KEY }}" > $TEMP
-          USER=${{ secrets.SSH_USER }}
-          HOST=${{ secrets.HOST }}
-          PW=${{ secrets.password }}
-          mkdir ~/.ssh
-          mkdir ~/.ssh/authorized_keys/
-          chmod 700 ~/.ssh
-          echo "${{ secrets.PUB_KEY }}" > ~/.ssh/authorized_keys/actions.pub
-          echo "${{ secrets.PUB_KEY }}" > ~/.ssh/actions.pub
-          echo "scp to $USER@$HOST with pass $PW"
-          ssh -vv -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $TEMP $USER@$HOST 'pwd'
 
-      # scp -v -o StrictHostKeyChecking=no -p $PW website/* $USER@$HOST:/home/
-
-      #- name: copy file via ssh
-      #  uses:  appleboy/scp-action@master
-      #  with:
-      #    host: ${{ secrets.HOST }}
-      #    port: 22
-      #    username: ${{ secrets.SSH_USER }}
-      #    #password: ${{ secrets.PASSWORD }}
-      #    key: ${{ secrets.KEY }}
-      #    passphrase: ${{ secrets.PASSPHRASE }}
-      #    source: website/*
-      #    target: "~./"
+      - name: copy file via ssh
+        uses:  appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          port: 22
+          username: ${{ secrets.SSH_USER }}
+          #password: ${{ secrets.PASSWORD }}
+          key: ${{ secrets.KEY }}
+          source: website/*
+          target: "~./"
