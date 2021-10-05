@@ -31,7 +31,8 @@ jobs:
           USER=${{ secrets.SSH_USER }}
           HOST=${{ secrets.HOST }}
           PW=${{ secrets.password }}
-          ECHO "${{ secrets.pub_key }}" > ~/.ssh/authorized_keys
+          ECHO "${{ secrets.pub_key }}" > ~/.ssh/authorized_keys/actions.pub
+          ECHO "${{ secrets.key }}" > ~/.ssh/actions.pub
           echo "scp to $USER@$HOST with pass $PW"
           ssh -vv -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $TEMP $USER@$HOST 'pwd'
 
