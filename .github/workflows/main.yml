@@ -34,8 +34,8 @@ jobs:
           mkdir ~/.ssh
           mkdir ~/.ssh/authorized_keys/
           chmod 700 ~/.ssh
-          echo "${{ secrets.pub_key }}" > ~/.ssh/authorized_keys/actions.pub
-          echo "${{ secrets.key }}" > ~/.ssh/actions.pub
+          echo "${{ secrets.PUB_KEY }}" > ~/.ssh/authorized_keys/actions.pub
+          echo "${{ secrets.PUB_KEY }}" > ~/.ssh/actions.pub
           echo "scp to $USER@$HOST with pass $PW"
           ssh -vv -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i $TEMP $USER@$HOST 'pwd'
 
