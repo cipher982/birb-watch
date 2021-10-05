@@ -41,7 +41,7 @@ jobs:
         with:
           RSYNC_OPTIONS: -avzr --delete --exclude node_modules --exclude '.git*'
           RSYNC_TARGET: /home/drose/
-          RSYNC_SOURCE: /website
+          RSYNC_SOURCE: /website/
         env:
           SSH_PRIVATE_KEY: ${{secrets.KEY}}
           SSH_USERNAME: ${{secrets.SSH_USER}}
