@@ -11,13 +11,13 @@ load_dotenv()
 GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID")
 OAUTH_CLIENT_SECRET = os.getenv("OAUTH_CLIENT_SECRET")
-OAUTH_ACESS_TOKEN = os.getenv("OAUTH_ACESS_TOKEN")
+OAUTH_ACCESS_TOKEN = os.getenv("OAUTH_ACCESS_TOKEN")
 OAUTH_REFRESH_TOKEN = os.getenv("OAUTH_REFRESH_TOKEN")
 GCP_DEVICE_ID = os.getenv("GCP_DEVICE_ID")
 YT_KEY = os.getenv("YT_KEY")
 
 YOUTUBE_SERVER_URL = "rtmp://a.rtmp.youtube.com/live2/"
-ENV_PATH = "../.env"
+ENV_PATH = ".env"
 
 # Define a function in python to run a CURL command
 def run_curl(curl_string):
@@ -32,8 +32,7 @@ def save_token(access_token, file_path):
         newlines = []
         for line in f.readlines():
             if "OAUTH_ACCESS_TOKEN" in line:
-                print(f"Found old token: {line[-3:]}")
-                new_line = f"OAUTH_ACCESS_TOKEN={access_token}"
+                new_line = f"OAUTH_ACCESS_TOKEN={access_token}\n"
                 newlines.append(new_line)
                 print(f"Replacing with new access token {access_token[-3:]}")
             else:
@@ -84,7 +83,7 @@ curl -X POST \
 
 def main():
     try:
-        rtsp_url = get_rtsp_url(OAUTH_ACESS_TOKEN)
+        rtsp_url = get_rtsp_url(OAUTH_ACCESS_TOKEN)
         print("Using cached access_token")
     except:
         print("Access token expired, gathering new one. . .")
@@ -103,6 +102,8 @@ def main():
     # command and params for ffmpeg
     command = [
         "ffmpeg",
+        "-framerate",
+        "20",
         "-y",
         "-f",
         "rawvideo",
@@ -127,7 +128,7 @@ def main():
         "-pix_fmt",
         "yuv420p",
         "-preset",
-        "superfast",
+        "ultrafast",
         "-f",
         "flv",
         YOUTUBE_SERVER_URL + YT_KEY,
