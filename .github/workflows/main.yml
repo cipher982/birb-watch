@@ -18,7 +18,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
-          source: "tests/a.txt,tests/b.txt"
+          source: "website/"
           target: "test"
 
       #- name: Run a multi-line script
