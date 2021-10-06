@@ -11,13 +11,23 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      - name: Run a multi-line script
-        run: |
-          mkdir ../website
-          cp -TR . ../website
-          pwd
-          ls
-          ls ..
+      - name: Deploy to sandbox via rsync
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          source: "tests/a.txt,tests/b.txt"
+          target: "test"
+
+      #- name: Run a multi-line script
+      #  run: |
+      #    mkdir ../website
+      #    cp -TR . ../website
+      #    pwd
+      #    ls
+      #    ls ..
       #- name: Setup Tailscale
       #  id: tailscale
       #  uses: tailscale/tailscale-deploy-github@main
@@ -36,23 +46,14 @@ jobs:
       #    source: website/*
       #    target: "~./"
 
-      - name: Adding Known Hosts
-        run: |
-          mkdir ~/.ssh
-          chmod 0700 ~/.ssh
-          echo "${{ secrets.KEY }}" >> ~/.ssh/id_rsa
-          chmod 0700 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+      #- name: Adding Known Hosts
+      #  run: |
+      #    mkdir ~/.ssh
+      #    chmod 0700 ~/.ssh
+      #    echo "${{ secrets.KEY }}" >> ~/.ssh/id_rsa
+      #    chmod 0700 ~/.ssh/id_rsa
+      #    ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy with rsync
-        run: rsync -avz -i ~/.ssh/id_rsa ./website/ ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:/home/drose/
-      
-      - name: Deploy to sandbox via rsync
-        uses: burnett01/rsync-deployments@5.1
-        with:
-          switches: -avzr --delete
-          path: website/
-          remote_path: /home/drose/
-          remote_host: ${{ secrets.HOST }}
-          remote_user: ${{ secrets.SSH_USER }}
-          remote_key: ${{secrets.KEY }}
+      #- name: Deploy with rsync
+      #  run: rsync -avz -i ~/.ssh/id_rsa ./website/ ${{ secrets.SSH_USER }}@${{ secrets.HOST }}:/home/drose/
+
