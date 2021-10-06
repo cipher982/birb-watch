@@ -20,3 +20,4 @@ jobs:
           port: ${{ secrets.PORT }}
           source: "website/*"
           target: "/var/www/"
+          strip_components: 1
