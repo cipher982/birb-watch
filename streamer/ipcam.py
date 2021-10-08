@@ -4,48 +4,44 @@ import subprocess
 import cv2
 from dotenv import load_dotenv
 
-import utils
-
 load_dotenv()
 
 
-GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
-OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID")
-OAUTH_CLIENT_SECRET = os.getenv("OAUTH_CLIENT_SECRET")
-OAUTH_ACCESS_TOKEN = os.getenv("OAUTH_ACCESS_TOKEN")
-OAUTH_REFRESH_TOKEN = os.getenv("OAUTH_REFRESH_TOKEN")
-GCP_DEVICE_ID = os.getenv("GCP_DEVICE_ID")
+AMCREST_USER = os.getenv("AMCREST_USER")
+AMCREST_PW = os.getenv("AMCREST_PW")
+AMCREST_IP = os.getenv("AMCREST_IP")
 YT_KEY = os.getenv("YT_KEY")
 
 YOUTUBE_SERVER_URL = "rtmp://a.rtmp.youtube.com/live2/"
-ENV_PATH = ".env"
+
+
+def get_amcrest_rtsp_url(user, pw, ip):
+    url = (
+        f"rtsp://{user}:{pw}@{ip}:554/"
+        "cam/realmonitor?channel=1&subtype=0&authbasic=64"
+    )
+    return url
 
 
 def main():
-    try:
-        rtsp_url = utils.get_rtsp_url(GCP_PROJECT_ID, GCP_DEVICE_ID, OAUTH_ACCESS_TOKEN)
-        print("Using cached access_token")
-    except:
-        print("Access token expired, gathering new one. . .")
-        access_token = utils.get_access_token(
-            OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REFRESH_TOKEN
-        )
-        utils.save_token(access_token, ENV_PATH)
-        rtsp_url = utils.get_rtsp_url(GCP_PROJECT_ID, GCP_DEVICE_ID, access_token)
 
+    # Get the URL based on env variables
+    rtsp_url = get_amcrest_rtsp_url(AMCREST_USER, AMCREST_PW, AMCREST_IP)
+    print(f"Received RTSP URL: {rtsp_url}")
+
+    # Bring stream into CV2
     cap = cv2.VideoCapture(rtsp_url)
+    print("Loaded camera stream into cv2")
 
     # gather video info to ffmpeg
     fps = int(cap.get(cv2.CAP_PROP_FPS))
-    fps = 20
+    fps = 30
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     # command and params for ffmpeg
     command = [
         "ffmpeg",
-        "-framerate",
-        "20",
         "-y",
         "-f",
         "rawvideo",
