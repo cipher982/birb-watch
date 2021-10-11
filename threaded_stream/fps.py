@@ -1,8 +1,7 @@
-# import the necessary packages
 import datetime
 
 
-class FPS:
+class FPSCounter:
     def __init__(self):
         # store the start time, end time, and total number of frames
         # that were examined between the start and end intervals
