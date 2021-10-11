@@ -1,5 +1,8 @@
 import os
 import subprocess
+from threading import Thread
+import sys
+from queue import Queue
 
 import cv2
 from dotenv import load_dotenv
@@ -82,7 +85,11 @@ def main():
             break
 
         # YOUR CODE FOR PROCESSING FRAME HERE
-
+        y = 0
+        x = 0
+        h = 512
+        w = 512
+        frame = frame[y : y + h, x : x + w]
         # write to pipe
         p.stdin.write(frame.tobytes())
 
