@@ -91,6 +91,7 @@ def main():
         w = 512
         frame = frame[y : y + h, x : x + w]
         # write to pipe
+        p.stdin.write(frame.tobytes())
 
 
 if __name__ == "__main__":
