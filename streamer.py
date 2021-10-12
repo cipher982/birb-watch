@@ -31,7 +31,7 @@ def get_args():
         "-d",
         "--display",
         type=int,
-        default=-1,
+        default=1,
         help="Whether or not frames should be displayed",
     )
     args = vars(ap.parse_args())
@@ -42,10 +42,11 @@ def plot_boxes(model, results, frame):
     labels, cord = results
     n = len(labels)
     x_shape, y_shape = frame.shape[1], frame.shape[0]
+    bird_boxes = []
     for i in range(n):
         row = cord[i]
         # If score is less than 0.2 we avoid making a prediction.
-        if row[4] < 0.2:
+        if row[4] < 0.4:
             continue
         x1 = int(row[0] * x_shape)
         y1 = int(row[1] * y_shape)
@@ -58,7 +59,13 @@ def plot_boxes(model, results, frame):
         cv2.putText(
             frame, classes[labels[i]], (x1, y1), label_font, 0.9, bgr, 2
         )  # Put a label over box.
-        return frame
+
+        if classes[labels[i]] == "bird":
+            print("Found bird")
+            bird_box = frame[y1:y2, x1:x2]
+            bird_boxes.append(bird_box)
+
+    return frame, bird_boxes
 
 
 def main():
@@ -84,17 +91,21 @@ def main():
             # Read in a frame from the capture stream
             frame = vs.read()
 
-            # crop
+            # Crop
             y, x = 0, 420
             h, w = 1080, 1080
             frame = frame[y : y + h, x : x + w]
 
-            # resize
+            # Resize
             # frame = imutils.resize(frame, width=512, height=512)
 
             # Find objects
             results = scorer.score_frame(frame)
-            frame = plot_boxes(model, results, frame)
+            labels = results[0]
+            coords = results[1]
+            frame, bird_boxes = plot_boxes(model, results, frame)
+            if len(bird_boxes) > 0:
+                print(f"Found {len(bird_boxes)} bird boxes")
 
             # Pause if needed to keep output around 30-40 FPS
             elapsed_time = time() - start_time
@@ -110,6 +121,7 @@ def main():
             except:
                 pass
 
+    # Due to previous issues killing process, adding an int catch
     except KeyboardInterrupt:
         print("KeyboardInterrupt detected, killing stream")
         cv2.destroyAllWindows()
