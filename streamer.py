@@ -1,13 +1,13 @@
 import argparse
 import os
 import subprocess
-from time import sleep
+from time import sleep, time
 
 import imutils
 import cv2
 from dotenv import load_dotenv
-import torch
 
+from scorers import YOLOv5
 from stream_utils import transcode
 from threaded_stream import RTSPStream
 
@@ -38,21 +38,6 @@ def get_args():
     return args
 
 
-def load_model():
-    model = torch.hub.load("ultralytics/yolov5", "yolov5s", pretrained=True)
-    return model
-
-
-def score_frame(frame, model):
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model.to(device)
-    frame = [frame]
-    results = model(frame)
-    labels = results.xyxyn[0][:, -1].cpu().numpy().astype(int)
-    cord = results.xyxyn[0][:, :-1].cpu().numpy()
-    return labels, cord
-
-
 def plot_boxes(model, results, frame):
     labels, cord = results
     n = len(labels)
@@ -80,8 +65,9 @@ def main():
     # construct the argument parse and parse the arguments
     args = get_args()
 
-    # Load model
-    model = load_model()
+    # Load scorer
+    scorer = YOLOv5()
+    model = scorer.model
 
     print("[INFO] sampling THREADED frames from webcam...")
     vs = RTSPStream().start()
@@ -93,6 +79,9 @@ def main():
     # Main streamer loop
     try:
         while True:
+            start_time = time()
+
+            # Read in a frame from the capture stream
             frame = vs.read()
 
             # crop
@@ -104,9 +93,15 @@ def main():
             # frame = imutils.resize(frame, width=512, height=512)
 
             # Find objects
-            results = score_frame(frame, model)
+            results = scorer.score_frame(frame)
             frame = plot_boxes(model, results, frame)
 
+            # Pause if needed to keep output around 30-40 FPS
+            elapsed_time = time() - start_time
+            if elapsed_time < 50:
+                sleep((50 - elapsed_time) * 0.001)
+
+            # Catch the occasional missed frame without crashing
             try:
                 if args["display"] > 0:
                     cv2.imshow("Frame", frame)
