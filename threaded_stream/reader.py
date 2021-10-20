@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-AMCREST_USER = os.getenv("AMCREST_USER")
-AMCREST_PW = os.getenv("AMCREST_PW")
-AMCREST_IP = os.getenv("AMCREST_IP")
+RTSP_USER = os.getenv("RTSP_USER")
+RTSP_PW = os.getenv("RTSP_PW")
+RTSP_IP = os.getenv("RTSP_IP")
 
 
 def get_amcrest_rtsp_url(user, pw, ip):
@@ -21,9 +21,14 @@ def get_amcrest_rtsp_url(user, pw, ip):
     return url
 
 
+def get_reolink_rtsp_url(user, pw, ip):
+    url = f"rtsp://{user}:{pw}@{ip}:554//h264Preview_01_main"
+    return url
+
+
 class RTSPStream:
     def __init__(self, src=0):
-        rtsp_url = get_amcrest_rtsp_url(AMCREST_USER, AMCREST_PW, AMCREST_IP)
+        rtsp_url = get_reolink_rtsp_url(RTSP_USER, RTSP_PW, RTSP_IP)
         print(f"Received RTSP URL: {rtsp_url}")
 
         self.stream = cv2.VideoCapture(rtsp_url)

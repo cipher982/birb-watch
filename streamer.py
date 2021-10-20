@@ -93,7 +93,7 @@ def main():
 
             # Crop
             y, x = 0, 420
-            h, w = 1080, 1080
+            h, w = 1920, 1720
             frame = frame[y : y + h, x : x + w]
 
             # Resize
