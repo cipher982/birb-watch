@@ -5,9 +5,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-AMCREST_USER = os.getenv("AMCREST_USER")
-AMCREST_PW = os.getenv("AMCREST_PW")
-AMCREST_IP = os.getenv("AMCREST_IP")
 YT_KEY = os.getenv("YT_KEY")
 
 YOUTUBE_SERVER_URL = "rtmp://a.rtmp.youtube.com/live2/"

@@ -13,8 +13,8 @@ from threaded_stream import RTSPStream
 
 load_dotenv()
 
-WIDTH = 512
-HEIGHT = 512
+WIDTH = 1280
+HEIGHT = 720
 FPS = 30
 
 
@@ -94,7 +94,7 @@ def main():
             # Crop
             y, x = 0, 420
             h, w = 1920, 1720
-            frame = frame[y : y + h, x : x + w]
+            # frame = frame[y : y + h, x : x + w]
 
             # Resize
             # frame = imutils.resize(frame, width=512, height=512)
@@ -103,7 +103,8 @@ def main():
             results = scorer.score_frame(frame)
             labels = results[0]
             coords = results[1]
-            frame, bird_boxes = plot_boxes(model, results, frame)
+            bird_boxes = []
+            # frame, bird_boxes = plot_boxes(model, results, frame)
             if len(bird_boxes) > 0:
                 print(f"Found {len(bird_boxes)} bird boxes")
 
