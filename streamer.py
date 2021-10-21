@@ -6,6 +6,7 @@ from time import sleep, time
 import imutils
 import cv2
 from dotenv import load_dotenv
+import numpy as np
 
 from scorers import YOLOv5
 from stream_utils import transcode
@@ -13,9 +14,9 @@ from threaded_stream import RTSPStream
 
 load_dotenv()
 
-WIDTH = 1280
-HEIGHT = 720
-FPS = 30
+WIDTH = 2304
+HEIGHT = 1296
+FPS = 15
 
 
 def get_args():
@@ -83,6 +84,9 @@ def main():
     ffmpeg_cmd = transcode(WIDTH, HEIGHT, FPS)
     p = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
 
+    # collect inference times for analysis
+    timers = []
+
     # Main streamer loop
     try:
         while True:
@@ -93,7 +97,7 @@ def main():
 
             # Crop
             y, x = 0, 420
-            h, w = 1920, 1720
+            h, w = 1280, 720
             # frame = frame[y : y + h, x : x + w]
 
             # Resize
@@ -104,18 +108,20 @@ def main():
             labels = results[0]
             coords = results[1]
             bird_boxes = []
-            # frame, bird_boxes = plot_boxes(model, results, frame)
+            frame, bird_boxes = plot_boxes(model, results, frame)
             if len(bird_boxes) > 0:
                 print(f"Found {len(bird_boxes)} bird boxes")
 
             # Pause if needed to keep output around 30-40 FPS
             elapsed_time = time() - start_time
-            if elapsed_time < 50:
-                sleep((50 - elapsed_time) * 0.001)
+            timers.append(elapsed_time)
+            if elapsed_time < (1 / FPS):
+                sleep((1 / FPS) - elapsed_time)
 
             # Catch the occasional missed frame without crashing
             try:
                 if args["display"] > 0:
+                    pass
                     cv2.imshow("Frame", frame)
                     key = cv2.waitKey(1) & 0xFF
                 p.stdin.write(frame.tobytes())
@@ -127,7 +133,8 @@ def main():
         print("KeyboardInterrupt detected, killing stream")
         cv2.destroyAllWindows()
         vs.stop()
-        p.kill()
+        p.stdin.write(b"q\r\n")
+        print(f"Avg frame processing time: {int(np.mean(timers)*1_000)}ms")
 
 
 if __name__ == "__main__":

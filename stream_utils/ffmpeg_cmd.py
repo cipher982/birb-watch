@@ -6,7 +6,6 @@ load_dotenv()
 
 
 YT_KEY = os.getenv("YT_KEY")
-
 YOUTUBE_SERVER_URL = "rtmp://a.rtmp.youtube.com/live2/"
 
 
