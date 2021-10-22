@@ -85,8 +85,8 @@ def main():
     p = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
 
     # collect inference times for analysis
-    timers = []
-
+    model_timers = []
+    write_timers = []
     # Main streamer loop
     try:
         while True:
@@ -114,17 +114,21 @@ def main():
 
             # Pause if needed to keep output around 30-40 FPS
             elapsed_time = time() - start_time
-            timers.append(elapsed_time)
+            model_timers.append(elapsed_time)
             if elapsed_time < (1 / FPS):
+                pass
                 sleep((1 / FPS) - elapsed_time)
 
             # Catch the occasional missed frame without crashing
+            # TODO: this try statement needs a more elegant solution
             try:
+                start_time = time()
                 if args["display"] > 0:
                     pass
                     cv2.imshow("Frame", frame)
                     key = cv2.waitKey(1) & 0xFF
                 p.stdin.write(frame.tobytes())
+                write_timers.append(time() - start_time)
             except:
                 pass
 
@@ -134,7 +138,8 @@ def main():
         cv2.destroyAllWindows()
         vs.stop()
         p.stdin.write(b"q\r\n")
-        print(f"Avg frame processing time: {int(np.mean(timers)*1_000)}ms")
+        print(f"Avg frame processing time: {int(np.mean(model_timers)*1_000)}ms")
+        print(f"Avg stream write time: {int(np.mean(write_timers)*1_000)}ms")
 
 
 if __name__ == "__main__":
