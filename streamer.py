@@ -1,22 +1,30 @@
 import argparse
+from datetime import datetime
+import json
+import multiprocessing as mp
 import os
+from queue import Queue
+import requests
 import subprocess
 from time import sleep, time
 
-import imutils
 import cv2
 from dotenv import load_dotenv
 import numpy as np
 
 from scorers import YOLOv5
-from stream_utils import transcode
+from stream_utils import transcode, plot_boxes
 from threaded_stream import RTSPStream
+
 
 load_dotenv()
 
 WIDTH = 2304
 HEIGHT = 1296
 FPS = 15
+
+BIRD_DIR = "classifier/images"
+MODEL_NAME = "effecientNet_B3"
 
 
 def get_args():
@@ -39,34 +47,24 @@ def get_args():
     return args
 
 
-def plot_boxes(model, results, frame):
-    labels, cord = results
-    n = len(labels)
-    x_shape, y_shape = frame.shape[1], frame.shape[0]
-    bird_boxes = []
-    for i in range(n):
-        row = cord[i]
-        # If score is less than 0.2 we avoid making a prediction.
-        if row[4] < 0.4:
-            continue
-        x1 = int(row[0] * x_shape)
-        y1 = int(row[1] * y_shape)
-        x2 = int(row[2] * x_shape)
-        y2 = int(row[3] * y_shape)
-        bgr = (0, 255, 0)  # color of the box
-        classes = model.names  # Get the name of label index
-        label_font = cv2.FONT_HERSHEY_SIMPLEX  # Font for the label.
-        cv2.rectangle(frame, (x1, y1), (x2, y2), bgr, 2)  # Plot the boxes
-        cv2.putText(
-            frame, classes[labels[i]], (x1, y1), label_font, 0.9, bgr, 2
-        )  # Put a label over box.
-
-        if classes[labels[i]] == "bird":
-            print("Found bird")
-            bird_box = frame[y1:y2, x1:x2]
-            bird_boxes.append(bird_box)
-
-    return frame, bird_boxes
+def predict_img(prediction_queue, classified_queue):
+    while True:
+        array = prediction_queue.get()
+        data = json.dumps(
+            {"signature_name": "serving_default", "instances": array.tolist()}
+        )
+        headers = {"content-type": "application/json"}
+        json_response = requests.post(
+            f"http://localhost:8502/v1/models/{MODEL_NAME}:predict",
+            data=data,
+            headers=headers,
+        )
+        predictions = json.loads(json_response.text)["predictions"]
+        pred_class = np.array(predictions[0]).argmax()
+        if classified_queue.full():
+            classified_queue.get()
+        classified_queue.put((array, pred_class))
+        print(pred_class)
 
 
 def main():
@@ -77,16 +75,28 @@ def main():
     scorer = YOLOv5()
     model = scorer.model
 
-    print("[INFO] sampling THREADED frames from webcam...")
+    # Start reading RTSP (input) stream from camera
+    print("Sampling THREADED frames from webcam...")
     vs = RTSPStream().start()
     # fps = FPS().start()
 
+    # Start ffmpeg (output) RTMP stream process
     ffmpeg_cmd = transcode(WIDTH, HEIGHT, FPS)
-    p = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
+    p_ffmpeg = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
+
+    # Start subprocess to send images to tf serve
+    m = mp.Manager()
+    prediction_queue = m.Queue(maxsize=10)
+    classified_queue = m.Queue(maxsize=10)
+    p_tf_serve = mp.Process(
+        target=predict_img, args=(prediction_queue, classified_queue)
+    )
+    p_tf_serve.start()
 
     # collect inference times for analysis
     model_timers = []
     write_timers = []
+
     # Main streamer loop
     try:
         while True:
@@ -104,13 +114,23 @@ def main():
             # frame = imutils.resize(frame, width=512, height=512)
 
             # Find objects
-            results = scorer.score_frame(frame)
-            labels = results[0]
-            coords = results[1]
+            detector_results = scorer.score_frame(frame)
+            labels = detector_results[0]
+            coords = detector_results[1]
             bird_boxes = []
-            frame, bird_boxes = plot_boxes(model, results, frame)
+            frame, bird_boxes = plot_boxes(model, detector_results, frame)
             if len(bird_boxes) > 0:
                 print(f"Found {len(bird_boxes)} bird boxes")
+                for box in bird_boxes:
+                    h = box.shape[0]
+                    w = box.shape[1]
+                    if w > 50 and h > 50:
+                        if not prediction_queue.full():
+                            prediction_queue.put(box)
+                        if not classified_queue.empty():
+                            bird_img, bird_class = classified_queue.get()
+                            file_name = f"bird_{bird_class}_{datetime.now()}.jpg"
+                            cv2.imwrite(os.path.join(BIRD_DIR, file_name), bird_img)
 
             # Pause if needed to keep output around 30-40 FPS
             elapsed_time = time() - start_time
@@ -127,7 +147,7 @@ def main():
                     pass
                     cv2.imshow("Frame", frame)
                     key = cv2.waitKey(1) & 0xFF
-                p.stdin.write(frame.tobytes())
+                p_ffmpeg.stdin.write(frame.tobytes())
                 write_timers.append(time() - start_time)
             except:
                 pass
@@ -137,7 +157,7 @@ def main():
         print("KeyboardInterrupt detected, killing stream")
         cv2.destroyAllWindows()
         vs.stop()
-        p.stdin.write(b"q\r\n")
+        p_ffmpeg.stdin.write(b"q\r\n")
         print(f"Avg frame processing time: {int(np.mean(model_timers)*1_000)}ms")
         print(f"Avg stream write time: {int(np.mean(write_timers)*1_000)}ms")
 
