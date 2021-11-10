@@ -23,7 +23,7 @@ WIDTH = 2304
 HEIGHT = 1296
 FPS = 15
 
-BIRD_DIR = "classifier/images"
+BIRD_DIR = "classifier/images/"
 MODEL_NAME = "effecientNet_B3"
 
 
@@ -49,6 +49,9 @@ def get_args():
 
 def predict_img(prediction_queue, classified_queue):
     while True:
+        if prediction_queue.empty():
+            time.sleep(0.2)
+            continue
         array = prediction_queue.get()
         data = json.dumps(
             {"signature_name": "serving_default", "instances": array.tolist()}
@@ -61,10 +64,14 @@ def predict_img(prediction_queue, classified_queue):
         )
         predictions = json.loads(json_response.text)["predictions"]
         pred_class = np.array(predictions[0]).argmax()
+        timestamp = int(time() * 1_000.0)
+        file_name = f"bird_{pred_class}_{timestamp}.jpg"
+        cv2.imwrite(os.path.join(BIRD_DIR, file_name), array)
+        print(f"Saved classified bird to {file_name}")
         if classified_queue.full():
             classified_queue.get()
         classified_queue.put((array, pred_class))
-        print(pred_class)
+        time.sleep(0.2)
 
 
 def main():
@@ -86,8 +93,8 @@ def main():
 
     # Start subprocess to send images to tf serve
     m = mp.Manager()
-    prediction_queue = m.Queue(maxsize=10)
-    classified_queue = m.Queue(maxsize=10)
+    prediction_queue = m.Queue(maxsize=100)
+    classified_queue = m.Queue(maxsize=100)
     p_tf_serve = mp.Process(
         target=predict_img, args=(prediction_queue, classified_queue)
     )
@@ -126,11 +133,12 @@ def main():
                     w = box.shape[1]
                     if w > 50 and h > 50:
                         if not prediction_queue.full():
+                            print(f"Prediction queue not full, adding bird box")
                             prediction_queue.put(box)
-                        if not classified_queue.empty():
-                            bird_img, bird_class = classified_queue.get()
-                            file_name = f"bird_{bird_class}_{datetime.now()}.jpg"
-                            cv2.imwrite(os.path.join(BIRD_DIR, file_name), bird_img)
+                        else:
+                            print("Prediction queue is full, skipping")
+                    else:
+                        print(f"Image too small, height: {h} width: {w}")
 
             # Pause if needed to keep output around 30-40 FPS
             elapsed_time = time() - start_time
@@ -145,7 +153,7 @@ def main():
                 start_time = time()
                 if args["display"] > 0:
                     pass
-                    cv2.imshow("Frame", frame)
+                    # cv2.imshow("Frame", frame)
                     key = cv2.waitKey(1) & 0xFF
                 p_ffmpeg.stdin.write(frame.tobytes())
                 write_timers.append(time() - start_time)
