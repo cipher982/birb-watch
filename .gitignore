@@ -113,6 +113,11 @@ ENV/
 env.bak/
 venv.bak/
 
+# Misc
+classifier/images*
+classifier/models
+models/
+
 # Spyder project settings
 .spyderproject
 .spyproject
