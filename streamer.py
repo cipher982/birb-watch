@@ -11,6 +11,8 @@ from time import sleep, time
 import cv2
 from dotenv import load_dotenv
 import numpy as np
+import onnx
+import onnxruntime
 
 from scorers import YOLOv5
 from stream_utils import transcode, plot_boxes
@@ -24,7 +26,9 @@ HEIGHT = 1296
 FPS = 15
 
 BIRD_DIR = "classifier/images/"
-MODEL_NAME = "effecientNet_B3"
+MODEL_DIR = "models/"
+DETECTOR_FILE = "yolov5s.onnx"
+CLASSIFIER_NAME = "effecientNet_B3"
 
 
 def get_args():
@@ -43,6 +47,12 @@ def get_args():
         default=1,
         help="Whether or not frames should be displayed",
     )
+    ap.add_argument(
+        "--onnx",
+        type=bool,
+        default=False,
+        help="Whether to use ONNX for object detection",
+    )
     args = vars(ap.parse_args())
     return args
 
@@ -50,7 +60,7 @@ def get_args():
 def predict_img(prediction_queue, classified_queue):
     while True:
         if prediction_queue.empty():
-            time.sleep(0.2)
+            sleep(0.2)
             continue
         array = prediction_queue.get()
         data = json.dumps(
@@ -58,7 +68,7 @@ def predict_img(prediction_queue, classified_queue):
         )
         headers = {"content-type": "application/json"}
         json_response = requests.post(
-            f"http://localhost:8502/v1/models/{MODEL_NAME}:predict",
+            f"http://localhost:8502/v1/models/{CLASSIFIER_NAME}:predict",
             data=data,
             headers=headers,
         )
@@ -78,9 +88,13 @@ def main():
     # construct the argument parse and parse the arguments
     args = get_args()
 
-    # Load scorer
-    scorer = YOLOv5()
-    model = scorer.model
+    # Load object detection model
+    if args["onnx"] == True:
+        model_path = os.path.join(MODEL_DIR, DETECTOR_FILE)
+        ort_session = onnxruntime.InferenceSession(model_path)
+    else:
+        scorer = YOLOv5()
+        detector_model = scorer.model
 
     # Start reading RTSP (input) stream from camera
     print("Sampling THREADED frames from webcam...")
@@ -112,20 +126,30 @@ def main():
             # Read in a frame from the capture stream
             frame = vs.read()
 
-            # Crop
-            y, x = 0, 420
-            h, w = 1280, 720
-            # frame = frame[y : y + h, x : x + w]
+            # Fix axes
+            frame = np.moveaxis(frame, -1, 0)
+
+            # Crop (1920x1080)
+            frame = frame[:, 288:-288, 384:-384]
 
             # Resize
             # frame = imutils.resize(frame, width=512, height=512)
 
             # Find objects
-            detector_results = scorer.score_frame(frame)
-            labels = detector_results[0]
-            coords = detector_results[1]
-            bird_boxes = []
-            frame, bird_boxes = plot_boxes(model, detector_results, frame)
+            if args["onnx"] == True:
+                ort_inputs = {
+                    ort_session.get_inputs()[0]
+                    .name: np.expand_dims(frame, 0)
+                    .astype(np.float32)
+                }
+                ort_outs = ort_session.run(None, ort_inputs)
+            else:
+                detector_results = scorer.score_frame(frame)
+                labels = detector_results[0]
+                coords = detector_results[1]
+                bird_boxes = []
+                frame, bird_boxes = plot_boxes(detector_model, detector_results, frame)
+
             if len(bird_boxes) > 0:
                 print(f"Found {len(bird_boxes)} bird boxes")
                 for box in bird_boxes:
