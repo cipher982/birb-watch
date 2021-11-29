@@ -14,7 +14,8 @@ import numpy as np
 import onnx
 import onnxruntime
 
-from scorers import YOLOv5
+from onnx_utils.Augmentations import letterbox
+from scorers import YOLOv5Torch, YOLOv5ONNX
 from stream_utils import transcode, plot_boxes
 from threaded_stream import RTSPStream
 
@@ -91,9 +92,10 @@ def main():
     # Load object detection model
     if args["onnx"] == True:
         model_path = os.path.join(MODEL_DIR, DETECTOR_FILE)
-        ort_session = onnxruntime.InferenceSession(model_path)
+        # ort_session = onnxruntime.InferenceSession(model_path)
+        scorer = YOLOv5ONNX()
     else:
-        scorer = YOLOv5()
+        scorer = YOLOv5Torch()
         detector_model = scorer.model
 
     # Start reading RTSP (input) stream from camera
