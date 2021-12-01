@@ -1,7 +1,7 @@
 import torch
 
 
-class YOLOv5:
+class YOLOv5Torch:
     def __init__(self):
         self.model = torch.hub.load("ultralytics/yolov5", "yolov5s", pretrained=True)
 

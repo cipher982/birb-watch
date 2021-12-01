@@ -11,10 +11,8 @@ from time import sleep, time
 import cv2
 from dotenv import load_dotenv
 import numpy as np
-import onnx
-import onnxruntime
 
-from onnx_utils.Augmentations import letterbox
+# from stream_utils.onnx import letterbox
 from scorers import YOLOv5Torch, YOLOv5ONNX
 from stream_utils import transcode, plot_boxes
 from threaded_stream import RTSPStream
@@ -93,7 +91,7 @@ def main():
     if args["onnx"] == True:
         model_path = os.path.join(MODEL_DIR, DETECTOR_FILE)
         # ort_session = onnxruntime.InferenceSession(model_path)
-        scorer = YOLOv5ONNX()
+        scorer = YOLOv5ONNX(model_path)
     else:
         scorer = YOLOv5Torch()
         detector_model = scorer.model
@@ -139,12 +137,11 @@ def main():
 
             # Find objects
             if args["onnx"] == True:
-                ort_inputs = {
-                    ort_session.get_inputs()[0]
-                    .name: np.expand_dims(frame, 0)
-                    .astype(np.float32)
-                }
-                ort_outs = ort_session.run(None, ort_inputs)
+                pass
+                detector_results = scorer.score_frame(frame)
+                pred = detector_results[0]
+                img = detector_results[1]
+                scorer.plot_boxes(pred, img, frame, names=[])
             else:
                 detector_results = scorer.score_frame(frame)
                 labels = detector_results[0]
